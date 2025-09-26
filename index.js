@@ -21,7 +21,7 @@ isadmin = (req,res, next) => {
   res.redirect('/login')
 }
 
-// gestion de la visita
+// Gestion de la visita
 app.get('/login', (req, res) => {
   res.render('login')
 })
