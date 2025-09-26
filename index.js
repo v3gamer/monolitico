@@ -14,7 +14,7 @@ app.get('/', (req, res) => {
   res.render('index',{title: "Super Plantilla",name: "Victor"})
 })
 
-isAuth = (req,res, next) => {
+isadmin = (req,res, next) => {
   if (req.cookies && req.cookies.user){
       return next();
   }
