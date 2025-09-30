@@ -1,14 +1,21 @@
-const express = require('express')
-const cookieParser = require('cookie-parser')
-const app = express()
-const port = 3000
+const express = require('express');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const Database = require('better-sqlite3');
 
-app.set('view engine', 'ejs')
+const app = express();
+const db = new Database('database.sqlite');
+const bcrypt = require('bcrypt');
+const port = 3000;
 
-app.use(express.urlencoded());
-app.use(express.json());
+// Configuración de EJS
+app.set('view engine', 'ejs');
+
+// Middlewares
+app.use(bodyParser.urlencoded());
 app.use(cookieParser());
 
+// Middleware de autenticación
 const isAuth = (req, res, next) => {
   if (req.cookies && req.cookies.user) {
     return next();
@@ -16,67 +23,69 @@ const isAuth = (req, res, next) => {
   res.redirect('/login');
 };
 
-app.get('/', (req, res) => {
-    //sql
-  res.render('index',{title: "Super Plantilla",name: "Victor"})
-})
-
-isadmin = (req,res, next) => {
-  if (req.cookies && req.cookies.role === "admin"){
-      return next();
+// Middleware: solo admin
+const isAdmin = (req, res, next) => {
+  if (req.cookies && req.cookies.role === "admin") {
+    return next();
   }
   res.status(403).send("Acceso denegado: solo admins");
-}
+};
 
-isUser = (req, res, next) => {
+// Middleware: solo user
+const isUser = (req, res, next) => {
   if (req.cookies && req.cookies.role === "user") {
     return next();
   }
   res.status(403).send("Acceso denegado: solo usuarios");
 };
 
+// Página principal con super plantilla
+app.get('/', (req, res) => {
+  res.render('index', { title: "Super Plantilla", name: "Victor" });
+});
 
-
-// Gestion de la visita
-
+// Login
 app.get('/login', (req, res) => {
-  res.render('login')
-})
+  res.render('login');
+});
 
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  // buscamos el usuario en la base de datos
+  const bd = db.prepare('SELECT * FROM users WHERE username = ?');
+  const user = bd.get(username);
+  if (user && bcrypt.compareSync(password, user.password)) {
+    // guardamos cookies
+    res.cookie("user", user.username);
+    res.cookie("role", user.role);
+    if (user.role === "admin") {
+      res.redirect('/admin');
+    } else {
+      res.redirect('/profile');
+    }
+  } else {
+    res.status(401).redirect('/login');
+  }
+});
+
+// Logout
 app.get('/logout', (req, res) => {
   res.clearCookie("user");
   res.clearCookie("role");
-  res.redirect('login');
+  res.redirect('/login');
 });
 
-app.post('/login', (req,res) => {
-    const { admin, password1, user, password } = req.body;
-    console.log(req.body)
-
-   if (admin == "admin" && password1 == "12345"){
-    console.log("usuario y contraseña correcta")
-    res.cookie("user", admin,) //opciones - js no secure si
-    res.cookie("role", "admin");
-    res.redirect('admin')
-
-   } else if(user == "user" && password == "1234"){
-    res.cookie("user", user,) 
-    res.cookie("role", "user");
-    res.redirect('profile')
-   }
-   else {
-    res.status(401).redirect("login")
-   }
+// Rutas protegidas
+app.get('/admin', isAuth, isAdmin, (req, res) => {
+  res.send("Bienvenido administrador");
 });
 
 app.get('/profile', isAuth, isUser, (req, res) => {
-  res.render('profile');
+  res.send("Bienvenido usuario");
 });
 
-app.get('/admin', isAuth, isadmin, (req, res) => {
-  res.render('admin');
-});
-
+// Servidor
 app.listen(port, () => {
-  console.log(`Example app listening on port http://localhost:${port}`)
-})
+  console.log(`Servidor corriendo en http://localhost:${port}`);
+});
+
