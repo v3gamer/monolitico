@@ -1,91 +1,122 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const Database = require('better-sqlite3');
+const { Client } = require('pg');
+const bcrypt = require('bcrypt');
+const path = require('path');
+require('dotenv').config();
 
 const app = express();
-const db = new Database('database.sqlite');
-const bcrypt = require('bcrypt');
 const port = 3000;
 
-// Configuración de EJS
 app.set('view engine', 'ejs');
-
-// Middlewares
-app.use(bodyParser.urlencoded());
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(cookieParser());
 
-// Middleware de autenticación
-const isAuth = (req, res, next) => {
-  if (req.cookies && req.cookies.user) {
-    return next();
-  }
-  res.redirect('/login');
-};
-
-// Middleware: solo admin
-const isAdmin = (req, res, next) => {
-  if (req.cookies && req.cookies.role === "admin") {
-    return next();
-  }
-  res.status(403).send("Acceso denegado: solo admins");
-};
-
-// Middleware: solo user
-const isUser = (req, res, next) => {
-  if (req.cookies && req.cookies.role === "user") {
-    return next();
-  }
-  res.status(403).send("Acceso denegado: solo usuarios");
-};
-
-// Página principal con super plantilla
-app.get('/', (req, res) => {
-  res.render('index', { title: "Super Plantilla", name: "Victor" });
+const client = new Client({
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'monolito',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 1234,
 });
 
-// Login
-app.get('/login', (req, res) => {
-  res.render('login');
-});
+function isAdmin(req, res, next) {
+  if (req.cookies.user && req.cookies.role === 'admin') return next();
+  return res.redirect('/');
+}
 
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  // buscamos el usuario en la base de datos
-  const bd = db.prepare('SELECT * FROM users WHERE username = ?');
-  const user = bd.get(username);
-  if (user && bcrypt.compareSync(password, user.password)) {
-    // guardamos cookies
-    res.cookie("user", user.username);
-    res.cookie("role", user.role);
-    if (user.role === "admin") {
-      res.redirect('/admin');
-    } else {
-      res.redirect('/profile');
-    }
-  } else {
-    res.status(401).redirect('/login');
-  }
-});
+function isUser(req, res, next) {
+  if (req.cookies.user && req.cookies.role === 'user') return next();
+  return res.redirect('/');
+}
 
-// Logout
+app.get('/', (req, res) => res.render('login'));
+app.get('/index', isUser, (req, res) =>
+  res.render('index', { user: req.cookies.user }),
+);
+app.get('/home', isAdmin, (req, res) =>
+  res.render('home', { user: req.cookies.user }),
+);
+
 app.get('/logout', (req, res) => {
-  res.clearCookie("user");
-  res.clearCookie("role");
-  res.redirect('/login');
+  res.clearCookie('user');
+  res.clearCookie('role');
+  console.log('logged out');
+  res.redirect('/');
 });
 
-// Rutas protegidas
-app.get('/admin', isAuth, isAdmin, (req, res) => {
-  res.send("Bienvenido administrador");
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const result = await client.query(
+      'SELECT username, password, role FROM users WHERE username = $1',
+      [username],
+    );
+
+    const dbuser = result.rows[0];
+    if (!dbuser) {
+      console.log('Usuario no encontrado');
+      return res.redirect('/');
+    }
+
+    const ok = await bcrypt.compare(password, dbuser.password);
+    if (!ok) {
+      console.log('Contraseña incorrecta');
+      return res.redirect('/');
+    }
+
+    res.cookie('user', dbuser.username, { httpOnly: true });
+    res.cookie('role', dbuser.role, { httpOnly: true });
+
+    console.log(`${dbuser.role} logged in`);
+    return res.redirect(dbuser.role === 'admin' ? '/home' : '/index');
+  } catch (err) {
+    console.error('Login error:', err);
+    return res.redirect('/');
+  }
 });
 
-app.get('/profile', isAuth, isUser, (req, res) => {
-  res.send("Bienvenido usuario");
-});
+async function start() {
+  try {
+    await client.connect();
+    console.log('Conectado a la base de datos');
 
-// Servidor
-app.listen(port, () => {
-  console.log(`Servidor corriendo en http://localhost:${port}`);
-});
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL
+      );
+    `);
 
+    const adminHash = await bcrypt.hash('adminpass', 10);
+    const userHash = await bcrypt.hash('userpass', 10);
+
+    await client.query(
+      `INSERT INTO users (username, password, role)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (username) DO NOTHING`,
+      ['admin', adminHash, 'admin'],
+    );
+
+    await client.query(
+      `INSERT INTO users (username, password, role)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (username) DO NOTHING`,
+      ['user', userHash, 'user'],
+    );
+
+    app.listen(port, () => {
+      console.log('Usuarios de prueba: admin/adminpass y user/userpass');
+    });
+  } catch (err) {
+    console.error('Error inicializando base de datos:', err);
+    process.exit(1);
+  }
+}
+
+start();

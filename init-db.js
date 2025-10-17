@@ -1,19 +1,67 @@
-const Database = require('better-sqlite3');
+// init-db.js
+const { Client } = require('pg');
 const bcrypt = require('bcrypt');
-const db = new Database('database.sqlite', { verbose: console.log });
+require('dotenv').config();
 
-//tabla users
+async function waitForDB() {
+  const client = new Client({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+  });
 
-const sentencia = db.prepare('CREATE TABLE IF NOT EXISTS users ( id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT unique,password TEXT,role TEXT)');
+  while (true) {
+    try {
+      await client.connect();
+      await client.end();
+      console.log('✅ PostgreSQL listo');
+      break;
+    } catch (err) {
+      console.log('⏳ Esperando a PostgreSQL...');
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+}
 
-sentencia.run();
+async function main() {
+  await waitForDB();
 
-//insertar usuarios
+  const client = new Client({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+  });
 
-const insertar = db.prepare('INSERT or IGNORE INTO users (username,password,role) VALUES (?,?,?)')
+  await client.connect();
 
-const hashedPasswordAdmin = bcrypt.hashSync("12345", 10);
-insertar.run("admin",hashedPasswordAdmin,"admin");
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(255) UNIQUE NOT NULL,
+      password VARCHAR(255) NOT NULL,
+      role VARCHAR(50) NOT NULL
+    );
+  `);
 
-const hashedPasswordUser = bcrypt.hashSync("1234", 10);
-insertar.run("user",hashedPasswordUser,"user")
+  const adminHash = await bcrypt.hash('adminpass', 10);
+  const userHash = await bcrypt.hash('userpass', 10);
+
+  await client.query(
+    `INSERT INTO users (username, password, role) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING`,
+    ['admin', adminHash, 'admin'],
+  );
+
+  await client.query(
+    `INSERT INTO users (username, password, role) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING`,
+    ['user', userHash, 'user'],
+  );
+
+  console.log('✅ Base de datos inicializada con usuarios de prueba');
+  await client.end();
+}
+
+main();
