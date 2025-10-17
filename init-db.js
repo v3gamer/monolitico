@@ -19,7 +19,7 @@ async function waitForDB() {
       console.log('✅ PostgreSQL listo');
       break;
     } catch (err) {
-      console.log('⏳ Esperando a PostgreSQL...');
+      console.log('⏳ Esperando a PostgreSQL...', err);
       await new Promise((r) => setTimeout(r, 2000));
     }
   }
@@ -51,12 +51,12 @@ async function main() {
   const userHash = await bcrypt.hash('userpass', 10);
 
   await client.query(
-    `INSERT INTO users (username, password, role) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING`,
+    'INSERT INTO users (username, password, role) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING',
     ['admin', adminHash, 'admin'],
   );
 
   await client.query(
-    `INSERT INTO users (username, password, role) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING`,
+    'INSERT INTO users (username, password, role) VALUES ($1, $2, $3) ON CONFLICT (username) DO NOTHING',
     ['user', userHash, 'user'],
   );
 
