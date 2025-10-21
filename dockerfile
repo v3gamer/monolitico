@@ -29,7 +29,4 @@ ENV POSTGRES_USER=postgres \
 EXPOSE 3000 5432
 
 # CMD
-CMD bash -c "\
-    service postgresql start && \
-    gosu postgres psql --command \"CREATE DATABASE ${POSTGRES_DB};\" && \
-    node index.js"
+CMD ["bash", "-c", "gosu postgres bash -c 'initdb -D /var/lib/postgresql/data && pg_ctl -D /var/lib/postgresql/data -o \"-k /run/postgresql\" -w start && psql --command \"CREATE DATABASE ${POSTGRES_DB};\" && node index.js'"]
