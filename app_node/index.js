@@ -1,6 +1,6 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
-const { Client } = require('pg');
+const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const path = require('path');
 require('dotenv').config();
@@ -14,12 +14,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-const client = new Client({
-  host: process.env.DB_HOST || 'localhost',
+const pool = new Pool({
+  host: process.env.DB_HOST || 'romantic_lamport',
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || 'monolito',
   user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 1234,
+  password: process.env.DB_PASSWORD || '1234',
 });
 
 function isAdmin(req, res, next) {
@@ -33,11 +33,11 @@ function isUser(req, res, next) {
 }
 
 app.get('/', (req, res) => res.render('login'));
-app.get('/index', isUser, (req, res) =>
-  res.render('index', { user: req.cookies.user }),
-);
-app.get('/home', isAdmin, (req, res) =>
+app.get('/home', isUser, (req, res) =>
   res.render('home', { user: req.cookies.user }),
+);
+app.get('/admin', isAdmin, (req, res) =>
+  res.render('admin', { user: req.cookies.user }),
 );
 
 app.get('/logout', (req, res) => {
@@ -51,7 +51,7 @@ app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const result = await client.query(
+    const result = await pool.query(
       'SELECT username, password, role FROM users WHERE username = $1',
       [username],
     );
@@ -72,51 +72,13 @@ app.post('/login', async (req, res) => {
     res.cookie('role', dbuser.role, { httpOnly: true });
 
     console.log(`${dbuser.role} logged in`);
-    return res.redirect(dbuser.role === 'admin' ? '/home' : '/index');
+    return res.redirect(dbuser.role === 'admin' ? '/admin' : '/home');
   } catch (err) {
     console.error('Login error:', err);
     return res.redirect('/');
   }
 });
 
-async function start() {
-  try {
-    await client.connect();
-    console.log('Conectado a la base de datos');
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        role VARCHAR(50) NOT NULL
-      );
-    `);
-
-    const adminHash = await bcrypt.hash('adminpass', 10);
-    const userHash = await bcrypt.hash('userpass', 10);
-
-    await client.query(
-      `INSERT INTO users (username, password, role)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (username) DO NOTHING`,
-      ['admin', adminHash, 'admin'],
-    );
-
-    await client.query(
-      `INSERT INTO users (username, password, role)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (username) DO NOTHING`,
-      ['user', userHash, 'user'],
-    );
-
-    app.listen(port, () => {
-      console.log('Usuarios de prueba: admin/adminpass y user/userpass');
-    });
-  } catch (err) {
-    console.error('Error inicializando base de datos:', err);
-    process.exit(1);
-  }
-}
-
-start();
+app.listen(port, () => {
+  console.log('Usuarios de prueba: admin/adminpass y user/userpass');
+});
