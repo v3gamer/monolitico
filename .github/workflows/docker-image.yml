@@ -12,5 +12,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Build the Docker image
+
+      - name: Build Docker image for Database
         run: docker build -t myimage ./app_bbdd
