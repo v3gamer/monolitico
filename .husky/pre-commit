@@ -1,2 +1,2 @@
-cd node
+cd app_node
 npm test
