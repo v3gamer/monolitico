@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 FROM node:18
-=======
-FROM node:20
->>>>>>> 2_capas
 
 WORKDIR /app
 
@@ -11,8 +7,4 @@ RUN npm install
 
 EXPOSE 3000
 
-<<<<<<< HEAD
 CMD node init-db.js && npm start
-=======
-CMD node init-db.js && npm start
->>>>>>> 2_capas
