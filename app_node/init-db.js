@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 const { Client } = require('pg');
 const bcrypt = require('bcrypt');
 
+=======
+// init-db.js
+const { Client } = require('pg');
+const bcrypt = require('bcrypt');
+>>>>>>> 2_capas
 require('dotenv').config();
 
 const client = new Client({
@@ -25,18 +31,30 @@ async function main() {
 `);
 
     await client.query(
+<<<<<<< HEAD
       ` INSERT INTO users (username, password, role) VALUES 
+=======
+      `INSERT INTO users (username, password, role) VALUES 
+>>>>>>> 2_capas
     ($1, $2, $3)
     ON CONFLICT (username) DO NOTHING`,
       ['admin', await bcrypt.hash('adminpass', 10), 'admin'],
     );
 
     await client.query(
+<<<<<<< HEAD
       ` INSERT INTO users (username, password, role) VALUES
+=======
+      `INSERT INTO users (username, password, role) VALUES
+>>>>>>> 2_capas
     ($1, $2, $3)
     ON CONFLICT (username) DO NOTHING`,
       ['user', await bcrypt.hash('userpass', 10), 'user'],
     );
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2_capas
     client.end();
   } catch (err) {
     console.error('Error initializing database', err);

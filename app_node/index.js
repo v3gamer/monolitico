@@ -15,7 +15,11 @@ app.use(express.json());
 app.use(cookieParser());
 
 const pool = new Pool({
+<<<<<<< HEAD
   host: process.env.DB_HOST || 'localhost',
+=======
+  host: process.env.DB_HOST || 'romantic_lamport',
+>>>>>>> 2_capas
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || 'monolito',
   user: process.env.DB_USER || 'postgres',
@@ -48,11 +52,20 @@ app.get('/logout', (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
+<<<<<<< HEAD
   const { user, password } = req.body;
   try {
     const result = await pool.query(
       'SELECT username, password, role FROM users WHERE username = $1',
       [user],
+=======
+  const { username, password } = req.body;
+
+  try {
+    const result = await pool.query(
+      'SELECT username, password, role FROM users WHERE username = $1',
+      [username],
+>>>>>>> 2_capas
     );
 
     const dbuser = result.rows[0];
@@ -63,7 +76,11 @@ app.post('/login', async (req, res) => {
 
     const ok = await bcrypt.compare(password, dbuser.password);
     if (!ok) {
+<<<<<<< HEAD
       console.log('ContraseÃ±a incorrecta');
+=======
+      console.log('Contraseña incorrecta');
+>>>>>>> 2_capas
       return res.redirect('/');
     }
 
@@ -77,8 +94,32 @@ app.post('/login', async (req, res) => {
     return res.redirect('/');
   }
 });
+<<<<<<< HEAD
     app.listen(port, () => {
       console.log('Servidor escuchando');
       console.log('Usuarios de prueba: admin/adminpass y user/userpass');
     });
 
+=======
+
+app.post('/registro', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await pool.query(
+      'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)',
+      [username, hashedPassword, 'user'],
+    );
+    console.log('Usuario registrado');
+    return res.redirect('/');
+  } catch (err) {
+    console.error('Registro error:', err);
+    return res.redirect('/');
+  }
+});
+
+app.listen(port, () => {
+  console.log('Usuarios de prueba: admin/adminpass y user/userpass');
+});
+>>>>>>> 2_capas
