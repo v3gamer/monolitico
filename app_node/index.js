@@ -79,6 +79,23 @@ app.post('/login', async (req, res) => {
   }
 });
 
+app.post('/registro', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await pool.query(
+      'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)',
+      [username, hashedPassword, 'user'],
+    );
+    console.log('Usuario registrado');
+    return res.redirect('/');
+  } catch (err) {
+    console.error('Registro error:', err);
+    return res.redirect('/');
+  }
+});
+
 app.listen(port, () => {
   console.log('Usuarios de prueba: admin/adminpass y user/userpass');
 });
