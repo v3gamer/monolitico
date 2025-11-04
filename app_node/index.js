@@ -8,20 +8,25 @@ require('dotenv').config();
 const app = express();
 const port = 3000;
 
+// Configurar vistas
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
+// Conexión a Postgres (TOMA LAS VARIABLES DEL DOCKER COMPOSE)
 const pool = new Pool({
-  host: process.env.DB_HOST || 'contenedor_postgres',
+  host: process.env.DB_HOST,
   port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'monolito',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || '1234',
+  database: process.env.DB_DATABASE,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
 });
 
+console.log(`🔌 Conectando a PostgreSQL en: ${process.env.DB_HOST}`);
+
+// Middlewares de autenticación
 function isAdmin(req, res, next) {
   if (req.cookies.user && req.cookies.role === 'admin') return next();
   return res.redirect('/');
@@ -32,13 +37,10 @@ function isUser(req, res, next) {
   return res.redirect('/');
 }
 
+// Rutas
 app.get('/', (req, res) => res.render('login'));
-app.get('/home', isUser, (req, res) =>
-  res.render('home', { user: req.cookies.user }),
-);
-app.get('/admin', isAdmin, (req, res) =>
-  res.render('admin', { user: req.cookies.user }),
-);
+app.get('/home', isUser, (req, res) => res.render('home', { user: req.cookies.user }));
+app.get('/admin', isAdmin, (req, res) => res.render('admin', { user: req.cookies.user }));
 
 app.get('/logout', (req, res) => {
   res.clearCookie('user');
@@ -47,17 +49,16 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-app.get('/register', (req, res) =>
-  res.render('register'),
-);
+app.get('/register', (req, res) => res.render('register'));
 
-
+// LOGIN
 app.post('/login', async (req, res) => {
   const { user, password } = req.body;
+
   try {
     const result = await pool.query(
       'SELECT username, password, role FROM users WHERE username = $1',
-      [user],
+      [user]
     );
 
     const dbuser = result.rows[0];
@@ -68,7 +69,7 @@ app.post('/login', async (req, res) => {
 
     const ok = await bcrypt.compare(password, dbuser.password);
     if (!ok) {
-      console.log('ContraseÃ±a incorrecta');
+      console.log('Contraseña incorrecta');
       return res.redirect('/');
     }
 
@@ -83,11 +84,11 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// REGISTER
 app.post('/register', async (req, res) => {
-  const { user, password } = req.body; // en tu HTML el name es "user"
+  const { user, password } = req.body;
 
   try {
-    // comprobar si ya existe
     const exists = await pool.query(
       'SELECT * FROM users WHERE username = $1',
       [user]
@@ -97,26 +98,22 @@ app.post('/register', async (req, res) => {
       return res.send('El usuario ya existe. <a href="/register">Volver</a>');
     }
 
-    // encriptar contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // insertar usuario nuevo
     await pool.query(
       'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)',
       [user, hashedPassword, 'user']
     );
 
     console.log('Usuario registrado:', user);
-    res.send(
-      `Usuario ${user} registrado correctamente. <a href="/">Iniciar sesión</a>`
-    );
+    res.send(`Usuario ${user} registrado correctamente. <a href="/">Iniciar sesión</a>`);
   } catch (err) {
     console.error('Error registrando usuario:', err);
     res.send('Error al registrar usuario. <a href="/register">Volver</a>');
   }
 });
-    app.listen(port, () => {
-      console.log('Servidor escuchando');
-      console.log('Usuarios de prueba: admin/adminpass y user/userpass');
-    });
 
+// Servidor
+app.listen(port, () => {
+  console.log(`✅ Servidor escuchando en puerto ${port}`);
+});
