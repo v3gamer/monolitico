@@ -1,27 +1,16 @@
-<<<<<<< HEAD
 name: Docker
 
 # 🚀 Workflow para construir y publicar imágenes Docker en GitHub Container Registry
 # Funciona tanto en la rama main como en la rama dos_capas
-=======
-name: Docker Publish
->>>>>>> 2_capas
 
 on:
   schedule:
     - cron: '35 13 * * *'
   push:
-<<<<<<< HEAD
     branches: [ "main", "dos_capas" ]
     tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ "main" ]
-=======
-    branches: [ "dos_capas" ]
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ "dos_capas" ]
->>>>>>> 2_capas
 
 env:
   REGISTRY: ghcr.io
@@ -29,20 +18,14 @@ env:
 
 jobs:
   build:
-<<<<<<< HEAD
 
     runs-on: ubuntu-latest
-=======
-    runs-on: ubuntu-latest
-
->>>>>>> 2_capas
     permissions:
       contents: read
       packages: write
       id-token: write
 
     steps:
-<<<<<<< HEAD
       - name: 📥 Checkout del repositorio
         uses: actions/checkout@v4
 
@@ -61,29 +44,11 @@ jobs:
       - name: 🔑 Iniciar sesión en el registro ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
-=======
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install cosign
-        if: github.event_name != 'pull_request'
-        uses: sigstore/cosign-installer@v3.5.0
-        with:
-          cosign-release: 'v2.2.4'
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
->>>>>>> 2_capas
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-<<<<<<< HEAD
       # Metadatos para imagen Node
       - name: 🏗️ Extraer metadatos Docker para APP
         id: meta-app
@@ -97,30 +62,12 @@ jobs:
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
           context: ./node
-=======
-      # ------------------------------
-      # APP NODE
-      # ------------------------------
-      - name: Extract Docker metadata for APP_NODE
-        id: meta-app
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-app_node
-
-      - name: Build and push Docker image for APP_NODE
-        id: build-and-push-app
-        uses: docker/build-push-action@v5
-        with:
-          context: ./app_node
-          file: ./app_node/dockerfile
->>>>>>> 2_capas
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-app.outputs.tags }}
           labels: ${{ steps.meta-app.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-<<<<<<< HEAD
       # Metadatos para imagen PostgreSQL
       - name: 🏗️ Extraer metadatos Docker para POSTGRES
         id: meta-postgres
@@ -147,39 +94,3 @@ jobs:
           TAGS: ${{ steps.meta-app.outputs.tags }}
           DIGEST: ${{ steps.build-and-push-node.outputs.digest }}
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
-=======
-      # ------------------------------
-      # POSTGRES / BBDD
-      # ------------------------------
-      - name: Extract Docker metadata for APP_BBDD
-        id: meta-bbdd
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-app_bbdd
-
-      - name: Build and push Docker image for APP_BBDD
-        id: build-and-push-bbdd
-        uses: docker/build-push-action@v5
-        with:
-          context: ./app_bbdd
-          file: ./app_bbdd/dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta-bbdd.outputs.tags }}
-          labels: ${{ steps.meta-bbdd.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # ------------------------------
-      # SIGN IMAGES
-      # ------------------------------
-      - name: Sign the published Docker images
-        if: ${{ github.event_name != 'pull_request' }}
-        env:
-          TAGS_APP: ${{ steps.meta-app.outputs.tags }}
-          DIGEST_APP: ${{ steps.build-and-push-app.outputs.digest }}
-          TAGS_BBDD: ${{ steps.meta-bbdd.outputs.tags }}
-          DIGEST_BBDD: ${{ steps.build-and-push-bbdd.outputs.digest }}
-        run: |
-          echo "${TAGS_APP}" | xargs -I {} cosign sign --yes {}@${DIGEST_APP}
-          echo "${TAGS_BBDD}" | xargs -I {} cosign sign --yes {}@${DIGEST_BBDD}
->>>>>>> 2_capas

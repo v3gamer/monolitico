@@ -47,6 +47,11 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
+app.get('/register', (req, res) =>
+  res.render('register'),
+);
+
+
 app.post('/login', async (req, res) => {
   const { user, password } = req.body;
   try {
@@ -78,23 +83,40 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.post('/registro', async (req, res) => {
-  const { username, password } = req.body;
+app.post('/register', async (req, res) => {
+  const { user, password } = req.body; // en tu HTML el name es "user"
 
   try {
+    // comprobar si ya existe
+    const exists = await pool.query(
+      'SELECT * FROM users WHERE username = $1',
+      [user]
+    );
+    if (exists.rows.length > 0) {
+      console.log('El usuario ya existe');
+      return res.send('El usuario ya existe. <a href="/register">Volver</a>');
+    }
+
+    // encriptar contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // insertar usuario nuevo
     await pool.query(
       'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)',
-      [username, hashedPassword, 'user'],
+      [user, hashedPassword, 'user']
     );
-    console.log('Usuario registrado');
-    return res.redirect('/');
+
+    console.log('Usuario registrado:', user);
+    res.send(
+      `Usuario ${user} registrado correctamente. <a href="/">Iniciar sesión</a>`
+    );
   } catch (err) {
-    console.error('Registro error:', err);
-    return res.redirect('/');
+    console.error('Error registrando usuario:', err);
+    res.send('Error al registrar usuario. <a href="/register">Volver</a>');
   }
 });
+    app.listen(port, () => {
+      console.log('Servidor escuchando');
+      console.log('Usuarios de prueba: admin/adminpass y user/userpass');
+    });
 
-app.listen(port, () => {
-  console.log('Usuarios de prueba: admin/adminpass y user/userpass');
-});
