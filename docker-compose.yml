@@ -1,57 +1,53 @@
 services:
   app_1:
     build: ./app_node
-    container_name: nombre_app_1
+    container_name: app_1
     networks:
       - red2
     environment:
       - DB_HOST=bbdd_1
       - DB_USER=postgres
-      - DB_PASSWORD=1234
-      - DB_NAME=monolito
-      - DB_PORT=5432
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=usuarios_db_1
     ports:
       - "3001:3000"
     depends_on:
       - bbdd_1
 
   bbdd_1:
-    build: ./postgres
+    build: ./app_bbdd
     container_name: bbdd_1
     networks:
       - red2
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-      POSTGRES_DB: monolito
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=usuarios_db_1
     volumes:
       - datos_postgres_1:/var/lib/postgresql/data
 
   app_2:
     build: ./app_node
-    container_name: nombre_app_2
+    container_name: app_2
     networks:
       - red2
     environment:
       - DB_HOST=bbdd_2
       - DB_USER=postgres
-      - DB_PASSWORD=1234
-      - DB_NAME=monolito
-      - DB_PORT=5432
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=usuarios_db_2
     ports:
       - "3003:3000"
     depends_on:
       - bbdd_2
 
   bbdd_2:
-    build: ./postgres
+    build: ./app_bbdd
     container_name: bbdd_2
     networks:
       - red2
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-      POSTGRES_DB: monolito
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=usuarios_db_2
     volumes:
       - datos_postgres_2:/var/lib/postgresql/data
 
@@ -61,4 +57,6 @@ networks:
 
 volumes:
   datos_postgres_1:
+    driver: local
   datos_postgres_2:
+    driver: local
