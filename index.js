@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 const pool = new Pool({
-  host: process.env.DB_HOST || 'romantic_lamport',
+  host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || 'monolito',
   user: process.env.DB_USER || 'postgres',
@@ -79,23 +79,46 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.post('/registro', async (req, res) => {
-  const { username, password } = req.body;
-
+async function start() {
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query(
-      'INSERT INTO users (username, password, role) VALUES ($1, $2, $3)',
-      [username, hashedPassword, 'user'],
-    );
-    console.log('Usuario registrado');
-    return res.redirect('/');
-  } catch (err) {
-    console.error('Registro error:', err);
-    return res.redirect('/');
-  }
-});
+    await client.connect();
+    console.log('Conectado a la base de datos');
 
-app.listen(port, () => {
-  console.log('Usuarios de prueba: admin/adminpass y user/userpass');
-});
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL
+      );
+    `);
+
+    const adminHash = await bcrypt.hash('adminpass', 10);
+    const userHash = await bcrypt.hash('userpass', 10);
+
+    await client.query(
+      `INSERT INTO users (username, password, role)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (username) DO NOTHING`,
+      ['admin', adminHash, 'admin'],
+    );
+
+    await client.query(
+      `INSERT INTO users (username, password, role)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (username) DO NOTHING`,
+      ['user', userHash, 'user'],
+    );
+
+    app.listen(port, () => {
+      console.log('Servidor escuchando');
+      console.log('Usuarios de prueba: admin/adminpass y user/userpass');
+    });
+  } catch (err) {
+    console.error('Error inicializando base de datos:', err);
+    process.exit(1);
+  }
+}
+
+start();
+

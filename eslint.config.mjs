@@ -1,19 +1,14 @@
 import js from '@eslint/js';
 import globals from 'globals';
-import pluginPrettier from 'eslint-plugin-prettier';
 import { defineConfig } from 'eslint/config';
-
+import pluginPrettier from 'eslint-plugin-prettier';
 export default defineConfig([
-  // Base config (ESLint recommended + browser)
   {
-    ...js.configs.recommended,
-    languageOptions: {
-      globals: {
-        ...globals.browser,
-      },
-    },
+    files: ['**/*.{js,mjs,cjs}'],
+    plugins: { js },
+    extends: ['js/recommended'],
+    languageOptions: { globals: globals.browser },
   },
-  // Node-specific overrides
   {
     files: ['**/*.js'],
     languageOptions: {
@@ -23,9 +18,7 @@ export default defineConfig([
         ...globals.es2021,
       },
     },
-    plugins: {
-      prettier: pluginPrettier,
-    },
+    plugins: { prettier: pluginPrettier },
     rules: {
       semi: ['error', 'always'],
       quotes: ['error', 'single'],

@@ -1,9 +1,0 @@
-FROM postgres:15-alpine
-
-ENV POSTGRES_USER=postgres \
-    POSTGRES_PASSWORD=1234 \
-    POSTGRES_DB=monolito
-
-VOLUME ["/var/lib/postgresql/data"]
-
-EXPOSE 5432
