@@ -87,6 +87,7 @@ app.post('/login', async (req, res) => {
 // REGISTER
 app.post('/register', async (req, res) => {
   const { user, password } = req.body;
+  console.log('Registrando usuario:', user, password);
 
   try {
     const exists = await pool.query(

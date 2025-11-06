@@ -1,21 +1,21 @@
 // init-db.js
-const { Client } = require('pg');
+const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 
-const client = new Client({
+const pool = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
+  database: process.env.DB_DATABASE,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
 });
 
 async function main() {
   try {
-    await client.connect();
+    await pool.connect();
 
-    await client.query(`
+    await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username VARCHAR(255) UNIQUE NOT NULL,
@@ -24,20 +24,21 @@ async function main() {
     );    
 `);
 
-    await client.query(
+    await pool.query(
       `INSERT INTO users (username, password, role) VALUES 
     ($1, $2, $3)
     ON CONFLICT (username) DO NOTHING`,
       ['admin', await bcrypt.hash('adminpass', 10), 'admin'],
     );
 
-    await client.query(
+    await pool.query(
       `INSERT INTO users (username, password, role) VALUES
     ($1, $2, $3)
     ON CONFLICT (username) DO NOTHING`,
       ['user', await bcrypt.hash('userpass', 10), 'user'],
     );
-    client.end();
+    pool.end();
+    console.log('Database initialized successfully');
   } catch (err) {
     console.error('Error initializing database', err);
   }

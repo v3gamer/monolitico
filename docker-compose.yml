@@ -34,7 +34,7 @@ services:
       - DB_HOST=bbdd_2
       - DB_USER=postgres
       - DB_PASSWORD=postgres
-      - DB_DATABASE=usuarios_db_2
+      - DB_DATABASE=usuarios_db_1
     ports:
       - "3003:3000"
     depends_on:
@@ -49,7 +49,7 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=usuarios_db_2
     volumes:
-      - datos_postgres_2:/var/lib/postgresql/data
+      - datos_postgres_1:/var/lib/postgresql/data
 
 networks:
   red2:
@@ -58,5 +58,4 @@ networks:
 volumes:
   datos_postgres_1:
     driver: local
-  datos_postgres_2:
-    driver: local
+
