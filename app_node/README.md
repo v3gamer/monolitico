@@ -65,3 +65,18 @@ Este proyecto es una aplicación web sencilla que implementa **autenticación co
 - El uso de roles da un control granular de accesos.
 
 - Las cookies permiten mantener la sesión sin necesidad de loguearse cada vez.
+
+
+### actividad 6
+
+docker build -t postgres .
+
+docker volume create datos_postgres
+
+![alt text](image.png)
+
+### actividad 7
+
+ docker compose build ; docker compose up -d 
+
+ docker compose restart
