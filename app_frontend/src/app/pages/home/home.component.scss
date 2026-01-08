@@ -1,0 +1,129 @@
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  background-color: #fafafa;
+  min-height: 100vh;
+}
+
+.post-card {
+  width: 100%;
+  max-width: 500px;
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  }
+
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  p {
+    padding: 1rem;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: #333;
+    word-wrap: break-word;
+
+    strong {
+      font-weight: 600;
+    }
+  }
+
+  /* Contenedor de botones tipo Instagram */
+  .post-actions {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    gap: 1rem;
+
+    .like-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      .likes-number {
+        font-size: 0.9rem;
+        color: #555;
+        margin-top: 2px;
+      }
+    }
+
+    button {
+      padding: 0.5rem;
+      border: none;
+      background: none;
+      font-size: 28px;
+      cursor: pointer;
+      transition: transform 0.15s, color 0.25s;
+      border-radius: 8px;
+      margin-bottom: 10%;
+
+      &:focus {
+        outline: none;
+      }
+
+      &:active {
+        transform: scale(0.9);
+      }
+
+      &.liked {
+        color: #ed4956;
+        animation: pop 0.25s ease;
+      }
+
+      &.active {
+        color: #3498db;
+        animation: pop 0.25s ease;
+      }
+
+      &.delete {
+        font-size: 16px;
+        background-color: #ff3b30;
+        color: #fff;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+
+        &:hover {
+          background-color: #e33228;
+        }
+      }
+    }
+  }
+
+  @keyframes pop {
+    0% { transform: scale(0.6); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+}
+
+/* Components internos como comentarios */
+app-comments {
+  display: block;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: #555;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .post-card {
+    border-radius: 12px;
+  }
+}

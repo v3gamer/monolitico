@@ -1,0 +1,11 @@
+<nav>
+    <ul>
+        <li><a routerLink="/">Home</a></li>
+        <li><a *ngIf="!auth.isLoggedIn()" routerLink="/login">Login</a></li>
+        <li><a *ngIf="auth.isLoggedIn()" routerLink="/profile">Profile</a></li>
+        <li><a *ngIf="auth.isLoggedIn()" routerLink="/create-post">Create Post</a></li>
+        <li><a *ngIf="auth.isLoggedIn()" (click)="logout()">Logout</a></li>
+    </ul>
+</nav>
+
+<router-outlet />

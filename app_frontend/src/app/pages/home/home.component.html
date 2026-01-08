@@ -1,0 +1,18 @@
+<main class="main">
+  <div *ngFor="let post of posts" class="post-card">
+    <img [src]="post.image_url" alt="{{post.username}}">
+    <p><strong>{{post.username}}</strong> {{ post.content }}</p>
+    <div class="post-actions" *ngIf="auth.isLoggedIn()">
+      <app-likes-number [postId]="post.id" class="like-button"></app-likes-number>
+      <button 
+        (click)="toggleComentarios(post.id)" 
+        [class.active]="comentariosVisibles[post.id]">
+        {{ comentariosVisibles[post.id] ? '💬' : '🗨️' }}
+      </button>
+      <button class="delete" (click)="deletePost(post.id)">Eliminar</button>
+    </div>
+    <app-comments *ngIf="auth.isLoggedIn() && comentariosVisibles[post.id]" [postId]="post.id"></app-comments>
+  </div>
+</main>
+<router-outlet />
+

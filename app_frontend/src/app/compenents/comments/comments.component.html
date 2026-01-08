@@ -1,0 +1,13 @@
+<!--LISTA DE COMENTARIOS-->
+
+<!--AHORA DEBAJO DE LA LSTA EL FORMULARIO PARA CREAR UN NUEVO COMENTARIO-->
+<div class="comments-section">
+    <div *ngFor="let comment of commentsList" class="comment-card">
+        <p>{{comment.username}}: {{comment.content}}</p>
+    </div>
+
+    <form (ngSubmit)="addComment()" #commentForm="ngForm" class="comment-form">
+        <input type="text" [(ngModel)]="newCommentContent" name="content" placeholder="Escribe un comentario..." required>
+        <button type="submit" [disabled]="!commentForm.form.valid">Agregar Comentario</button>
+    </form>
+</div>

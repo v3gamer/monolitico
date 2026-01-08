@@ -1,0 +1,6 @@
+<!--Formulario que recoja el content del usuario y lo envie al endpoint de la api-->
+<form (ngSubmit)="createPost()">
+  <label for="content">Contenido del post:</label>
+  <input type="text" id="content" name="content" [(ngModel)]="content" required>
+  <button type="submit">Crear post</button>
+</form>
