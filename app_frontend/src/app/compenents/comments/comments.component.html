@@ -1,13 +1,32 @@
-<!--LISTA DE COMENTARIOS-->
-
-<!--AHORA DEBAJO DE LA LSTA EL FORMULARIO PARA CREAR UN NUEVO COMENTARIO-->
+<!-- LISTA DE COMENTARIOS -->
 <div class="comments-section">
-    <div *ngFor="let comment of commentsList" class="comment-card">
-        <p>{{comment.username}}: {{comment.content}}</p>
-    </div>
 
-    <form (ngSubmit)="addComment()" #commentForm="ngForm" class="comment-form">
-        <input type="text" [(ngModel)]="newCommentContent" name="content" placeholder="Escribe un comentario..." required>
-        <button type="submit" [disabled]="!commentForm.form.valid">Agregar Comentario</button>
-    </form>
+  <div *ngFor="let comment of commentsList" class="comment-card">
+    <p>
+      <strong>{{ comment.username }}</strong>: {{ comment.content }}
+    </p>
+
+    <!-- BOTÓN BORRAR SOLO SI ES EL DUEÑO -->
+    <button
+      *ngIf="comment.user_id === currentUserId"
+      (click)="deleteComment(comment.id)">
+      Borrar
+    </button>
+  </div>
+
+  <!-- FORMULARIO NUEVO COMENTARIO -->
+  <form (ngSubmit)="addComment()" #commentForm="ngForm" class="comment-form">
+    <input
+      type="text"
+      [(ngModel)]="newCommentContent"
+      name="content"
+      placeholder="Escribe un comentario..."
+      required>
+
+    <button type="submit" [disabled]="!commentForm.valid">
+      Agregar Comentario
+    </button>
+  </form>
+
 </div>
+

@@ -6,14 +6,14 @@ import { Observable, tap } from 'rxjs';
   providedIn: 'root',
 })
 export class RestApiServiceService {
-  public url: string = 'http://localhost:3007';
+  public url: string = 'http://frontend.localhost/api';
   private tokenKey = 'authToken'
   isLoggedIn = signal(false);
   constructor(private http: HttpClient) {}
 
 
   login(username: string, password: string): Observable<any> {
-    const res = this.http.post(this.url + '/login', {username, password}).pipe(
+    const res = this.http.post(this.url  + '/auth/login', {username, password}).pipe(
       tap((response: any) => {
         if (response.token) {
           localStorage.setItem(this.tokenKey, response.token)
@@ -39,15 +39,16 @@ export class RestApiServiceService {
   getProfile(): Observable<any> {
     const token = this.getToken();
     const headers = new HttpHeaders(token ? { Authorization: `Bearer ${token}`} : {})
-    return this.http.get(this.url + '/profile', {headers});
+    return this.http.get(this.url + '/user/profile', {headers});
 
   }
+
 
   //posts
   //lista posts
 
   getPosts(): Observable<any> {
-    return this.http.get(this.url + '/posts');
+    return this.http.get(this.url + '/public/post');
   }
 
   //crear un post
@@ -66,7 +67,7 @@ export class RestApiServiceService {
 
   //lista comentario de un post
   getComments(postId: number): Observable<any> {
-    return this.http.get(this.url + '/comments/' + postId.toString());
+    return this.http.get(this.url + '/comment/' + postId.toString());
   }
 
   //crea un comentario en un post 
@@ -76,37 +77,42 @@ export class RestApiServiceService {
    return this.http.post(this.url + '/comment', { postId: postId, content }, { headers });
 }
 
-  //eliminar un comentario
+  //eliminar un comentario solo si es el dueño
   deleteComment(commentId: string): Observable<any> {
     const token = this.getToken();
+    const headers = new HttpHeaders(
+      token ? { Authorization: `Bearer ${token}` } : {}
+    );
+
+    return this.http.delete(this.url + '/comment/' + commentId, { headers });
+  }
+
+  //eliminar comentarios de un post
+  deleteCommentsByPost(postId: string): Observable<any> {
+    const token = this.getToken();
     const headers = new HttpHeaders(token ? { Authorization: `Bearer ${token}`} : {});
-    return this.http.delete(this.url + '/comment/' + commentId, {headers});
+    return this.http.delete(this.url + '/comment/' + postId, {headers});
   }
 
-  //contar likes de un post
-  getLikes(postId: number): Observable<any> {
-    return this.http.get(this.url + '/likes/' + postId);
+   getLikes(postId: number): Observable<any> {
+    return this.http.get(`${this.url}/like/count/${postId}`);
   }
 
-
-  //toggle like
   toggleLike(postId: number): Observable<any> {
     const token = this.getToken();
-    const headers = new HttpHeaders(token ? { Authorization: `Bearer ${token}`} : {});
-    return this.http.post(this.url + '/togglelike', {postId}, {headers});
+    const headers = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
+    return this.http.post(`${this.url}/like/toggle/${postId}`, {}, { headers });
   }
 
-  //check like
   checkLike(postId: number): Observable<any> {
     const token = this.getToken();
-    const headers = new HttpHeaders(token ? { Authorization: `Bearer ${token}`} : {});
-    return this.http.get(this.url + `/checklike/${postId}`, {headers});
+    const headers = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
+    return this.http.get(`${this.url}/like/check/${postId}`, { headers });
   }
 
-  //eliminar un like
   deleteLike(likeId: string): Observable<any> {
     const token = this.getToken();
-    const headers = new HttpHeaders(token ? { Authorization: `Bearer ${token}`} : {});
-    return this.http.delete(this.url + '/like/' + likeId, {headers});
+    const headers = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
+    return this.http.delete(`${this.url}/like/${likeId}`, { headers });
   }
 }

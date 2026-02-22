@@ -1,0 +1,42 @@
+{
+  "name": "monolitico_copy",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "prepare": "husky",
+    "lint:fix": "eslint . --fix --ext .js",
+    "format": "prettier --write .",
+    "test": "npm run lint:fix && npm run format"
+  },
+  "author": "Victo",
+  "license": "ISC",
+  "description": "Este proyecto es una aplicación web sencilla que implementa autenticación con roles utilizando:",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^12.4.1",
+    "cookie-parse": "^0.4.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "ejs": "^3.1.10",
+    "express": "5.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "nodemon": "^3.1.10",
+    "pg": "^8.16.3",
+    "picsum-photos": "^3.0.10",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.37.0",
+    "@eslint/json": "^0.13.2",
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.6.2"
+  },
+  "keywords": []
+}
